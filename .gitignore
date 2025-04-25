@@ -1,0 +1,7 @@
+.env
+docs.md
+tmp.txt
+setup.cfg
+\venv
+\output
+\__pycache__
