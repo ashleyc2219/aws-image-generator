@@ -36,7 +36,7 @@ class ImageGenerationConfig(BaseModel):
         6.5, ge=1.1, le=10, description="How closely the prompt will be followed"
     )
     seed: Optional[int] = Field(
-        None, ge=0, le=858993459, description="Seed for reproducibility"
+        0, ge=0, le=858993459, description="Seed for reproducibility"
     )
     quality: QualityEnum = QualityEnum.premium
 
@@ -104,7 +104,6 @@ class ImageVariationRequest(BaseModel):
 
 
 class TextImageRequest(BaseModel):
-    taskType: TaskTypeEnum = TaskTypeEnum.TEXT_IMAGE
     textImageParams: TextImageParams
     imageGenerationConfig: ImageGenerationConfig = ImageGenerationConfig()
 
