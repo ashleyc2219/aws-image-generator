@@ -6,3 +6,4 @@ setup.cfg
 \output
 \__pycache__
 tmp*
+\test
