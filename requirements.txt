@@ -1,6 +1,6 @@
 fastapi>=0.95.0
 uvicorn>=0.22.0
-boto3>=1.26.0
+boto3==1.37.37
 pillow>=10.0.0,<11.0.0  # Try to get a compatible version
 matplotlib>=3.7.0
 numpy>=1.24.0
