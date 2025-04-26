@@ -10,6 +10,10 @@ from models import (
     InPaintingRequest,
 )
 from utils import save_image
+import base64
+from prompt import GenerateImagePrePrompt, SearchPrePrompt
+from storage import get_images
+
 
 router = APIRouter()
 
@@ -18,29 +22,38 @@ def create_router(config):
     bedrock_client = config["bedrock_client"]
     image_model = config["image_model"]
     output_dir = config["output_dir"]
+    bedrock_agent = config["bedrock_agent_client"]
+    s3_client = config["s3_client"]
 
     @router.post("/test", response_model=ImageResponse)
     async def test():
+        with open("output/01-text-to-image_seed-1.png", "rb") as image_file:
+            reference_image_base64 = base64.b64encode(image_file.read()).decode("utf-8")
         """Test endpoint to check if the API is working"""
+
+        print("Generating image...")
+        print("image model:", image_model)
         body = json.dumps(
             {
-                "taskType": "TEXT_IMAGE",
-                "textToImageParams": {
-                    "text": "A men's collared white t-shirt, with a dog image in the center; the whole shirt is visible"
+                "taskType": "INPAINTING",
+                "inPaintingParams": {
+                    "text": "a white tshirt with a oliver tree graphic",
+                    "negativeText": "animal;people;green;man",
+                    "maskPrompt": "dog image",
+                    "image": reference_image_base64,
                 },
                 "imageGenerationConfig": {
-                    "numberOfImages": 1,  # Number of images to generate, up to 5
-                    "width": 1024,
-                    "height": 1024,
-                    "cfgScale": 6.5,  # How closely the prompt will be followed
-                    "seed": 5,  # Any number from 0 through 858,993,459
-                    "quality": "premium",  # Quality of either "standard" or "premium"
+                    "numberOfImages": 1,
+                    "cfgScale": 6.5,
+                    "seed": 0,
+                    "quality": "standard",
                 },
             }
         )
+        with open("request_body.json", "w") as file:
+            file.write(body)
 
-        print(f"Generating image {1}...")
-
+        # image_generation_model_id = "amazon.nova-canvas-v1:0"
         response = bedrock_client.invoke_model(
             body=body,
             modelId=image_model,
@@ -50,9 +63,15 @@ def create_router(config):
 
         response_body = json.loads(response.get("body").read())
 
-        base64_images = response_body.get("images")
-        image_path = f"{output_dir}/01-text-to-image_seed-{5}.png"
-        save_image(base64_images[0], image_path)
+        base64_images = response_body.get("images", [])
+
+        image_paths = []
+        for i, base64_image in enumerate(base64_images):
+            # Generate a unique filename
+            image_path = f"{output_dir}/text-to-image_{int(np.random.random() * 1000000)}_{i}.png"
+            save_image(base64_image, image_path)
+            image_paths.append(image_path)
+
         return {"image_paths": image_path, "base64_images": base64_images}
 
     @router.post("/inpainting", response_model=ImageResponse)
@@ -206,6 +225,138 @@ def create_router(config):
             raise HTTPException(
                 status_code=500, detail=f"Error generating image: {str(e)}"
             )
+
+    @router.post("/generate-prompt-optimize", response_model=str)
+    async def generate_prompt_optimize(request: str):
+        """
+        Optimize the generate prompt.
+        """
+        # Remove extra spaces and ensure proper formatting
+        text_model_id = "amazon.nova-pro-v1:0"
+        system_list = [
+            {
+                "text": "Yor are an assistant to user improve prompt, which is used to input a image generation AI model, so you need to make sure the prompt is clear and easy to understand by AI model."
+            },
+            {
+                "text": "For helping you comprehensive understand the prompt, you could assume that input vocabularies are all about a computer. For example, the case could refer to computer case, the cooler could refer to computer cooler."
+            },
+            {
+                "text": "Your output should be directly used as the input of image generation AI model, so you don't need to add any extra information."
+            },
+        ]
+
+        # Define one or more messages using the "user" and "assistant" roles.
+        message_list = [
+            {"role": "user", "content": [{"text": f"{GenerateImagePrePrompt} prompt"}]}
+        ]
+
+        # Configure the inference parameters.
+        inf_params = {"maxTokens": 500, "topP": 0.9, "topK": 20, "temperature": 0.7}
+        request_body = {
+            "schemaVersion": "messages-v1",
+            "messages": message_list,
+            "system": system_list,
+            "inferenceConfig": inf_params,
+        }
+
+        # Invoke the model with the response stream
+        response = bedrock_client.invoke_model_with_response_stream(
+            modelId=text_model_id, body=json.dumps(request_body)
+        )
+
+        stream = response.get("body")
+        text = ""
+        if stream:
+            for event in stream:
+                chunk = event.get("chunk")
+                chunk_json = json.loads(chunk.get("bytes").decode())
+                if "contentBlockDelta" in chunk_json:
+                    delta_text = chunk_json["contentBlockDelta"]["delta"]["text"]
+                    text += delta_text
+        return text
+
+    @router.post("/search-prompt-optimize", response_model=str)
+    async def search_prompt_optimize(request: str):
+        """
+        Optimize the generate prompt.
+        """
+        # Remove extra spaces and ensure proper formatting
+        text_model_id = "amazon.nova-pro-v1:0"
+        # system_list = []
+
+        # Define one or more messages using the "user" and "assistant" roles.
+        message_list = [
+            {"role": "user", "content": [{"text": f"{SearchPrePrompt} prompt"}]}
+        ]
+
+        # Configure the inference parameters.
+        inf_params = {"maxTokens": 500, "topP": 0.9, "topK": 20, "temperature": 0.7}
+        request_body = {
+            "schemaVersion": "messages-v1",
+            "messages": message_list,
+            # "system": system_list,
+            "inferenceConfig": inf_params,
+        }
+
+        # Invoke the model with the response stream
+        response = bedrock_client.invoke_model_with_response_stream(
+            modelId=text_model_id, body=json.dumps(request_body)
+        )
+
+        stream = response.get("body")
+        text = ""
+        if stream:
+            for event in stream:
+                chunk = event.get("chunk")
+                chunk_json = json.loads(chunk.get("bytes").decode())
+                if "contentBlockDelta" in chunk_json:
+                    delta_text = chunk_json["contentBlockDelta"]["delta"]["text"]
+                    text += delta_text
+        return text
+
+    @router.post("/search")
+    async def generate_prompt(request: str):
+        """
+        Optimized the search prompt then search the data.
+        """
+        try:
+            # optimize the prompt
+            print("optimizing prompt...")
+            optimized_prompt = await generate_prompt_optimize(request)
+            print("optimized prompt:", optimized_prompt)
+            response = bedrock_agent.retrieve(
+                knowledgeBaseId="53EOF738SO",
+                retrievalQuery={"text": request},
+                retrievalConfiguration={
+                    "vectorSearchConfiguration": {"numberOfResults": 1}
+                },
+            )
+
+            s3_locations = []
+            results = []
+
+            for result in response["retrievalResults"]:
+                if "location" in result and "s3Location" in result["location"]:
+                    data = dict()
+                    s3_uri = result["location"]["s3Location"]["uri"]
+                    iamges = get_images(
+                        s3_client, s3_uri.replace("s3://cm-product-2025/", "")
+                    )
+                    data["image_urls"] = iamges
+                    results.append(data)
+
+            print(f"Total S3 locations found: {len(s3_locations)}")
+
+            # Return both the original results and the extracted S3 locations
+            return {
+                "original_prompt": request,
+                "optimized_search_prompt": optimized_prompt,
+                "results": results,
+                "s3_locations": s3_locations,
+            }
+        except Exception as e:
+            print(f"Error querying knowledge base: {e}")
+            raise e
 
     @router.get("/")
     async def root():
