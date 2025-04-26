@@ -226,7 +226,7 @@ def create_router(config):
                 status_code=500, detail=f"Error generating image: {str(e)}"
             )
 
-    @router.post("/generate-prompt-optimize", response_model=str)
+    @router.post("/generate-prompt-optimize")
     async def generate_prompt_optimize(request: str):
         """
         Optimize the generate prompt.
@@ -273,9 +273,9 @@ def create_router(config):
                 if "contentBlockDelta" in chunk_json:
                     delta_text = chunk_json["contentBlockDelta"]["delta"]["text"]
                     text += delta_text
-        return text
+        return {"original_prompt": request, "optimized_prompt": text}
 
-    @router.post("/search-prompt-optimize", response_model=str)
+    @router.post("/search-prompt-optimize")
     async def search_prompt_optimize(request: str):
         """
         Optimize the generate prompt.
@@ -312,7 +312,7 @@ def create_router(config):
                 if "contentBlockDelta" in chunk_json:
                     delta_text = chunk_json["contentBlockDelta"]["delta"]["text"]
                     text += delta_text
-        return text
+        return {"original_prompt": request, "optimized_prompt": text}
 
     @router.post("/search")
     async def generate_prompt(request: str):
