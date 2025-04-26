@@ -30,10 +30,11 @@ def load_configuration():
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
 
+    region = "us-east-1"
     # Initialize Bedrock client
     bedrock_runtime_client = boto3.client(
         "bedrock-runtime",
-        region_name="us-east-1",
+        region_name=region,
         aws_access_key_id=aws_access_key,
         aws_secret_access_key=aws_secret_key,
         config=Config(
@@ -48,8 +49,17 @@ def load_configuration():
 
     print(f"Using image generation model: {image_generation_model}")
 
+    bedrock_agent = boto3.client("bedrock-agent-runtime", region_name=region)
+    s3_client = boto3.client(
+        "s3",
+        region_name="us-east-1",
+        aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key,
+    )
     return {
         "bedrock_client": bedrock_runtime_client,
+        "bedrock_agent_client": bedrock_agent,
+        "s3_client": s3_client,
         "image_model": image_generation_model,
         "output_dir": output_dir,
     }
