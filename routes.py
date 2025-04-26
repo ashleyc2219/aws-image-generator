@@ -17,6 +17,8 @@ from storage import get_images
 
 router = APIRouter()
 
+image_pre_prompt = "For helping you comprehensive understand the prompt, you could assume that input vocabularies are all about a computer. For example, the case could refer to computer case, the cooler could refer to computer cooler."
+
 
 def create_router(config):
     bedrock_client = config["bedrock_client"]
@@ -78,6 +80,9 @@ def create_router(config):
     async def inpainting(request: InPaintingRequest):
         """Generate image based on references iamges(max=5)"""
 
+        request.inPaintingParams.text = (
+            f"{image_pre_prompt} {request.inPaintingParams.text}"
+        )
         body = json.dumps(
             {
                 "taskType": TaskTypeEnum.INPAINTING,
@@ -116,6 +121,9 @@ def create_router(config):
     async def generate_variation(request: ImageVariationRequest):
         """Generate image based on references iamges(max=5)"""
 
+        request.imageVariationParams.text = (
+            f"{image_pre_prompt} {request.imageVariationParams.text}"
+        )
         body = json.dumps(
             {
                 "taskType": TaskTypeEnum.IMAGE_VARIATION,
@@ -189,6 +197,11 @@ def create_router(config):
     @router.post("/text-to-image", response_model=ImageResponse)
     async def text_to_image(request: TextImageRequest):
         """Generate images based on a text prompt"""
+
+        request.textImageParams.text = (
+            f"{image_pre_prompt} {request.textImageParams.text}"
+        )
+
         body = json.dumps(
             {
                 "taskType": TaskTypeEnum.TEXT_IMAGE,
