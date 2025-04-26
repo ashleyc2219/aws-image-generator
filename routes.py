@@ -349,8 +349,8 @@ def create_router(config):
 
             # Return both the original results and the extracted S3 locations
             return {
-                "original_prompt": request,
-                "optimized_search_prompt": optimized_prompt,
+                "original_prompt": optimized_prompt["original_prompt"],
+                "optimized_prompt": optimized_prompt["optimized_prompt"],
                 "results": results,
                 "s3_locations": s3_locations,
             }

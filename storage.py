@@ -45,7 +45,7 @@ def download_images_to_base64(image_urls, with_data_uri=False):
     """
     base64_list = []
 
-    for url in image_urls:
+    for url in image_urls[:3]:
         try:
             # Download the image
             response = requests.get(url)
