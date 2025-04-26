@@ -5,3 +5,4 @@ setup.cfg
 \venv
 \output
 \__pycache__
+tmp*

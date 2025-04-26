@@ -24,7 +24,7 @@ def load_configuration():
     aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "example")
 
     print(f"Using AWS Access Key: {aws_access_key}")
-    print(f"Using AWS Secret Key: {'[REDACTED]' if aws_secret_key else 'None'}")
+    print(f"Using AWS Secret Key: {aws_secret_key}")
 
     # Create output directory if it doesn't exist
     output_dir = "output"
@@ -37,14 +37,15 @@ def load_configuration():
         aws_access_key_id=aws_access_key,
         aws_secret_access_key=aws_secret_key,
         config=Config(
-            read_timeout=5 * 60,  # 5 minutes timeout
+            read_timeout=5 * 60,
         ),
     )
 
     # Get image generation model from environment
     image_generation_model = os.environ.get(
-        "AWS_IMAGE_GENERATOR_MODEL", "amazon.titan-image-generator-v1"
+        "AWS_IMAGE_GENERATOR_MODEL", "amazon.nova-canvas-v1:0"
     )
+
     print(f"Using image generation model: {image_generation_model}")
 
     return {

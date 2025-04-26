@@ -12,6 +12,8 @@ class TaskTypeEnum(str, Enum):
     TEXT_IMAGE = "TEXT_IMAGE"
     BACKGROUND_REMOVAL = "BACKGROUND_REMOVAL"
     IMAGE_VARIATION = "IMAGE_VARIATION"
+    INPAINTING = "INPAINTING"
+    OUTPAINTING = "OUTPAINTING"
     # Add other task types here as needed: INPAINTING, OUTPAINTING, etc.
 
 
@@ -66,12 +68,33 @@ class BackgroundRemovalParams(BaseModel):
 
 class ImageVariationParams(BaseModel):
     text: str = Field(..., description="Text prompt for image generation")
-    reference_image: str = Field(..., description="Base64 encoded reference image")
-    similarity_strength: float = Field(
+    images: List[str] = Field(..., description="Base64 encoded reference images")
+    similarityStrength: float = Field(
         0.8,
         ge=0.2,
         le=1.0,
         description="How strongly the input images influence the output. From 0.2 through 1.",
+    )
+
+
+class InPaintingParams(BaseModel):
+    text: str = Field(
+        ..., min_length=1, description="Text prompt describing the image to generate"
+    )
+    negativeText: str = Field(
+        None, description="What to avoid generating inside the mask"
+    )
+    image: str = Field(
+        ...,
+        description="image to edit, base64 encoded. The image must be in the same size as the mask.",
+    )
+    maskPrompt: str = Field(
+        None,
+        description="A description of the area(s) of the image to change. The mask must be in the same size as the image.",
+    )
+    maskImage: str = Field(
+        None,
+        description="A mask image that indicates the area(s) of the image to change. The mask must be in the same size as the image.",
     )
 
 
@@ -89,6 +112,12 @@ class TextImageRequest(BaseModel):
 class BackgroundRemovalRequest(BaseModel):
     taskType: TaskTypeEnum = TaskTypeEnum.BACKGROUND_REMOVAL
     backgroundRemovalParams: BackgroundRemovalParams
+
+
+class InPaintingRequest(BaseModel):
+    taskType: TaskTypeEnum = TaskTypeEnum.INPAINTING
+    inPaintingParams: InPaintingParams
+    imageGenerationConfig: ImageGenerationConfig = ImageGenerationConfig()
 
 
 class ImageResponse(BaseModel):
