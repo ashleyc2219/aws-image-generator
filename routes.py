@@ -202,6 +202,7 @@ def create_router(config):
             f"{image_pre_prompt} {request.textImageParams.text}"
         )
 
+        request.imageGenerationConfig.seed = np.random.randint(1, 1000001)
         body = json.dumps(
             {
                 "taskType": TaskTypeEnum.TEXT_IMAGE,
