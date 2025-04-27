@@ -336,7 +336,7 @@ def create_router(config):
         try:
             # optimize the prompt
             print("optimizing prompt...")
-            optimized_prompt = await generate_prompt_optimize(request)
+            optimized_prompt = await search_prompt_optimize(request)
             print("optimized prompt:", optimized_prompt)
             response = bedrock_agent.retrieve(
                 knowledgeBaseId="53EOF738SO",
