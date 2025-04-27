@@ -325,6 +325,7 @@ def create_router(config):
                 if "contentBlockDelta" in chunk_json:
                     delta_text = chunk_json["contentBlockDelta"]["delta"]["text"]
                     text += delta_text
+        text.replace("\n", "").replace("\\", "")
         return {"original_prompt": request, "optimized_prompt": text}
 
     @router.post("/search")
