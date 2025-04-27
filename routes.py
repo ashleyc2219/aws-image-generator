@@ -83,6 +83,7 @@ def create_router(config):
         request.inPaintingParams.text = (
             f"{image_pre_prompt} {request.inPaintingParams.text}"
         )
+        request.imageGenerationConfig.seed = np.random.randint(1, 1000001)
         body = json.dumps(
             {
                 "taskType": TaskTypeEnum.INPAINTING,
@@ -124,6 +125,7 @@ def create_router(config):
         request.imageVariationParams.text = (
             f"{image_pre_prompt} {request.imageVariationParams.text}"
         )
+        request.imageGenerationConfig.seed = np.random.randint(1, 1000001)
         body = json.dumps(
             {
                 "taskType": TaskTypeEnum.IMAGE_VARIATION,
