@@ -295,7 +295,7 @@ def create_router(config):
         """
         # Remove extra spaces and ensure proper formatting
         text_model_id = "amazon.nova-pro-v1:0"
-        # system_list = []
+        system_list = [{"text": "MAKE SURE YOUR RESPONSE SHOULD UNDER 500 tokens."}]
 
         # Define one or more messages using the "user" and "assistant" roles.
         message_list = [
@@ -307,7 +307,7 @@ def create_router(config):
         request_body = {
             "schemaVersion": "messages-v1",
             "messages": message_list,
-            # "system": system_list,
+            "system": system_list,
             "inferenceConfig": inf_params,
         }
 
