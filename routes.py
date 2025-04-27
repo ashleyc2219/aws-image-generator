@@ -295,7 +295,7 @@ def create_router(config):
         """
         # Remove extra spaces and ensure proper formatting
         text_model_id = "amazon.nova-pro-v1:0"
-        system_list = [{"text": "MAKE SURE YOUR RESPONSE SHOULD UNDER 500 tokens."}]
+        system_list = [{"text": "MAKE SURE YOUR RESPONSE SHOULD UNDER 800 tokens."}]
 
         # Define one or more messages using the "user" and "assistant" roles.
         message_list = [
@@ -325,7 +325,7 @@ def create_router(config):
                 if "contentBlockDelta" in chunk_json:
                     delta_text = chunk_json["contentBlockDelta"]["delta"]["text"]
                     text += delta_text
-        text.replace("\n", "").replace("\\", "")
+        text = text.replace("\n", "").replace("\\", "").replace("---", "")[:800]
         return {"original_prompt": request, "optimized_prompt": text}
 
     @router.post("/search")
