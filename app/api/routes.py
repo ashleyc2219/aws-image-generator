@@ -1,7 +1,7 @@
 import json
 import numpy as np
 from fastapi import APIRouter, HTTPException
-from models import (
+from app.models import (
     ImageResponse,
     TextImageRequest,
     TaskTypeEnum,
@@ -9,10 +9,10 @@ from models import (
     ImageVariationRequest,
     InPaintingRequest,
 )
-from utils import save_image
+from app.utils import save_image
 import base64
-from prompt import GenerateImagePrePrompt, SearchPrePrompt
-from storage import get_images
+from app.core import GenerateImagePrePrompt, SearchPrePrompt
+from app.core import get_images
 
 
 router = APIRouter()
